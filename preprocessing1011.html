@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <title>Preprocessing 101</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="../reveal.js/css/reveal.css">
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+  </style>
+  <link rel="stylesheet" href="reveal.js/css/theme/black.css" id="theme">
+  <!-- Printing and PDF exports -->
+  <script>
+    var link = document.createElement( 'link' );
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = window.location.search.match( /print-pdf/gi ) ? 'reveal.js/css/print/pdf.css' : 'reveal.js/css/print/paper.css';
+    document.getElementsByTagName( 'head' )[0].appendChild( link );
+  </script>
+  <!--[if lt IE 9]>
+  <script src="reveal.js/lib/js/html5shiv.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+<section>
+  <h1 class="title">Preprocessing 101</h1>
+</section>
+
+<section id="outline" class="slide level1">
+<h1>Outline</h1>
+<ol type="1">
+<li>Golden Rules</li>
+<li>Everything should be numbers
+<ul>
+<li>Categorical variable</li>
+<li>Date</li>
+</ul></li>
+<li>NaN ?</li>
+<li>Feature Engineering</li>
+<li>Quick and Dirty</li>
+</ol>
+</section>
+<section class="slide level1">
+
+<section>
+<h1>
+Golden Rules
+</h1>
+</section>
+<section class="slide level1">
+
+<h2 id="rule-1">Rule 1</h2>
+<h4 id="dont-reinvent-the-wheel"><em>Don’t reinvent the wheel</em></h4>
+<ol type="1">
+<li>Always, always, <strong>always</strong> google first</li>
+<li>StackOverflow has the best answers</li>
+</ol>
+<blockquote>
+<p>“You’ll be lucky if you have a single original idea in your entire life” (my dad)</p>
+</blockquote>
+</section>
+<section class="slide level1">
+
+<h2 id="rule-2">Rule 2</h2>
+<h4 id="never-loop-over-your-data-in-numpy-pandas"><em>NEVER loop over your data in Numpy / Pandas</em></h4>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">country_empty<span class="op">=</span>[]
+<span class="cf">for</span> i <span class="op">in</span> <span class="bu">range</span>(<span class="dv">0</span>,<span class="bu">len</span>(train)):
+    <span class="cf">if</span>(train[<span class="st">&#39;COUNTRY&#39;</span>][i] <span class="op">is</span> np.nan):
+        country_empty.append(train[<span class="st">&#39;FISRT_APP_COUNTRY&#39;</span>][i])</code></pre></div>
+<p>:-(</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">train[<span class="st">&#39;FISRT_APP_COUNTRY&#39;</span>][train[<span class="st">&#39;COUNTRY&#39;</span>].isnull()]</code></pre></div>
+:-)
+</section>
+</section>
+<section id="codebase" class="slide level1">
+<h1>Codebase</h1>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python"><span class="im">import</span> numpy <span class="im">as</span> np
+<span class="im">import</span> pandas <span class="im">as</span> pd
+
+train <span class="op">=</span> pd.read_csv(<span class="st">&#39;train.csv&#39;</span>, na_values=[<span class="st">&#39;none&#39;</span>, <span class="st">&#39;unknown&#39;</span>])
+test <span class="op">=</span> pd.read_csv(<span class="st">&#39;test.csv&#39;</span>, na_values=[<span class="st">&#39;none&#39;</span>, <span class="st">&#39;unknown&#39;</span>])
+<span class="co"># You "should" drop the ID column there</span>
+
+<span class="co"># Creating a DataFrame with train+test data</span>
+piv_train <span class="op">=</span> train.shape[<span class="dv">0</span>]
+df_all <span class="op">=</span> pd.concat((train, test), axis<span class="op">=</span><span class="dv">0</span>, ignore_index<span class="op">=</span><span class="va">True</span>)</code></pre></div>
+</section>
+<section class="slide level1">
+
+<section>
+<h1>
+Everything should be numbers
+</h1>
+</section>
+<section class="slide level1">
+
+<h2 id="categorical-variable">Categorical variable</h2>
+<p>Gotta catch ’em all !</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">numerics <span class="op">=</span> [<span class="st">&#39;int16&#39;</span>, <span class="st">&#39;int32&#39;</span>, <span class="st">&#39;int64&#39;</span>,
+            <span class="co">&#39;float16&#39;</span>, <span class="st">&#39;float32&#39;</span>, <span class="st">&#39;float64&#39;</span>]
+non_numeric_columns <span class="op">=</span> df_all.select_dtypes(exclude<span class="op">=</span>numerics).columns</code></pre></div>
+<p>Now you can do different things …</p>
+</section>
+<section class="slide level1">
+
+<h2 id="label-encoding">1. Label Encoding</h2>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: center;">column_before</th>
+<th style="text-align: center;">column_after</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">foo</td>
+<td style="text-align: center;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">bar</td>
+<td style="text-align: center;">1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">baz</td>
+<td style="text-align: center;">2</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">foo</td>
+<td style="text-align: center;">0</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python"><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> LabelEncoder
+df_all[non_numeric_columns] <span class="op">=</span> df_all[non_numeric_columns]
+                               .<span class="bu">apply</span>(LabelEncoder().fit_transform)</code></pre></div>
+</section>
+<section class="slide level1">
+
+<h2 id="one-hot-encoding">2. One Hot Encoding</h2>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: center;">column_before</th>
+<th style="text-align: center;">foo</th>
+<th style="text-align: center;">bar</th>
+<th style="text-align: center;">baz</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">foo</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">bar</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">baz</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">foo</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">ohe_columns <span class="op">=</span> non_numeric_columns
+dummies <span class="op">=</span> pd.concat(
+    [pd.get_dummies(df[col], prefix<span class="op">=</span>col) <span class="cf">for</span> col <span class="op">in</span> ohe_columns], 
+    axis<span class="op">=</span><span class="dv">1</span>)
+df_all.drop(ohe_columns, axis<span class="op">=</span><span class="dv">1</span>, inplace<span class="op">=</span><span class="va">True</span>)
+df_all <span class="op">=</span> pd.concat((df_all, dummies), axis<span class="op">=</span><span class="dv">1</span>)</code></pre></div>
+</section>
+<section class="slide level1">
+
+<h2 id="date-categorical-variable">Date != Categorical variable</h2>
+<p>You can extract Day/Month/Year/Whatever …</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">col <span class="op">=</span> <span class="st">&#39;some_date_column&#39;</span>
+<span class="co"># Let&#39;s assume this column has the format : 01/2016</span>
+regex <span class="op">=</span> <span class="vs">r&#39;([\d]</span><span class="sc">{2}</span><span class="vs">)/([\d]</span><span class="sc">{4}</span><span class="vs">)&#39;</span>
+df_all[[col <span class="op">+</span> <span class="st">&#39;_month&#39;</span>, col <span class="op">+</span> <span class="st">&#39;_year&#39;</span>]] <span class="op">=</span> df_all[col].<span class="bu">str</span>.extract(regex)
+df_all.drop(col, axis<span class="op">=</span><span class="dv">1</span>, inplace<span class="op">=</span><span class="va">True</span>)</code></pre></div>
+<p>… Or transform it to timestamp !</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python"><span class="im">import</span> datetime
+<span class="im">import</span> calendar
+<span class="kw">def</span> to_timestamp(date_string):
+    date_format <span class="op">=</span> <span class="st">&quot;%m/%Y&quot;</span>
+    <span class="cf">if</span> date_string <span class="op">is</span> np.nan:
+        <span class="cf">return</span> <span class="va">None</span>
+    to_datetime <span class="op">=</span> datetime.datetime.strptime(date_string, date_format)
+    <span class="cf">return</span> calendar.timegm(to_datetime.utctimetuple())
+df_all[col] <span class="op">=</span> df_all[col].<span class="bu">apply</span>(to_timestamp)</code></pre></div>
+</section>
+</section>
+<section class="slide level1">
+
+<section>
+<h1>
+NaN ?
+</h1>
+<p>Data might not be a number (yet)… Checkout:</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">df_all.isnull().<span class="bu">sum</span>()</code></pre></div>
+<p>What can I do ?</p>
+</section>
+<section class="slide level1">
+
+<h2 id="imputing">Imputing</h2>
+<p>Replace each missing data in a column by the column’s mean, median or most frequent term…</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python"><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> Imputer
+my_strategy <span class="op">=</span> <span class="st">&#39;mean&#39;</span> <span class="co"># or &#39;median&#39; or &#39;most_frequent&#39;</span>
+imp <span class="op">=</span> Imputer(strategy<span class="op">=</span>my_strategy)
+df_all <span class="op">=</span> pd.DataFrame(imp.fit_transform(df_all), 
+                      columns<span class="op">=</span>df_all.columns, 
+                      index<span class="op">=</span>df_all.index)</code></pre></div>
+</section>
+<section class="slide level1">
+
+<h2 id="fillna">Fillna()</h2>
+<p>… Or fill with the last valid term</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python"><span class="co"># Checkout other method for fillna() ;-)</span>
+df_all.fillna(method<span class="op">=</span><span class="st">&#39;ffill&#39;</span>, inplace<span class="op">=</span><span class="va">True</span>)</code></pre></div>
+</section>
+<section class="slide level1">
+
+<h2 id="tips">Tips</h2>
+<ol type="1">
+<li>Be smart! Don’t use only one method to replace NaNs…</li>
+<li>Be careful. Label Encoding and One Hot Encoding can somehow ‘remove’ your NaN values.</li>
+</ol>
+</section>
+</section>
+<section class="slide level1">
+
+<section>
+<h1>
+Feature Engineering
+</h1>
+<p>There is no method here, just feelings. Plot your data for each feature to give you an intuition, find correlations, …</p>
+<p>Think about the problem at hand and be creative !</p>
+</section>
+<section class="slide level1">
+
+<h2 id="scale-your-data">Scale your data</h2>
+<p>Some algorithms are dumb, help them.</p>
+<ol type="1">
+<li><p>Standardization = zero mean + unit variance</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">sklearn.preprocessing.StandardScaler</code></pre></div></li>
+<li><p>Transform your data: Sometimes a good logarithmic transformation is all you need</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">sklearn.preprocessing.FunctionTransformer</code></pre></div></li>
+</ol>
+</section>
+<section class="slide level1">
+
+<h2 id="create-new-features">Create new features</h2>
+<ol type="1">
+<li><p>Create a flag (0/1)</p>
+<p>Example: a company has 500+ employees</p></li>
+<li><p>Create new categories</p>
+<p>Example: indicate the season of a date feature</p></li>
+</ol>
+<p>[…]</p>
+</section>
+
+<section class="slide level1">
+
+<h2 id="against-anonymous-numerical-features">With only anonymous numerical features</h2>
+<ol type="1">
+<ul>
+<li><p>Create a ton of polynomial features...</p>
+<a href="http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PolynomialFeatures.html#sklearn.preprocessing.PolynomialFeatures">Sklearn's Polynomial Features</a></li>
+<li><p>... And select among them !</p>
+<a href="http://scikit-learn.org/stable/modules/classes.html#module-sklearn.feature_selection">Sklearn's Features Selection</a> (SelectKBest, RFECV)</li>
+</ul>
+</section>
+</section>
+<section class="slide level1">
+
+<section>
+<h1>
+Quick & Dirty
+</h1>
+</section>
+<section class="slide level1">
+
+<h2 id="you-always-need-a-baseline">You always need a baseline</h2>
+<p>A small script with one goal:</p><p>deliver a (not so bad) prediction</p>
+</section>
+<section class="slide level1">
+
+<h2 id="my-quick-and-dirty">My Quick and Dirty</h2>
+<ul>
+<li><p>All non numeric columns : Label encoder</p>
+<p>(do not keep text features)</p></li>
+<li><p>Date : Extract each component (year, month, day, hour, ...)</p></li>
+<li><p>NaN : Imputing</p></li>
+<li><p>0 feature engineering</p></li>
+<li><p>Model : XGBoost</p>
+<p>~ 300 / 500 rounds</p>
+<p>~ 8 / 10 depth</p></li>
+</ul>
+</section>
+</section>
+
+<section class="slide level1">
+
+<section>
+<h1>
+Going further?
+</h1>
+</section>
+
+<section class="slide level1">
+
+<h2 id="some-ideas">Some ideas</h2>
+<ol>
+<li><p>Hyper parameters optimization</p><p>Random vs Grid vs Bayesian (<a href="https://github.com/hyperopt/hyperopt">hyperopt</a>)</p></li>
+<li><p>Model ensembling</p><a href="http://mlwave.com/kaggle-ensembling-guide/">MLWave Ensembling Guide</a></li>
+<li><p>Image Preprocessing</p><p>ConvNet</p></li>
+<li><p>Text Preprocessing</p><p>Stemming, TfIdf, Word2Vec, GloVe, ...</p></li>
+</ol>
+</section>
+
+</section>
+    </div>
+  </div>
+
+  <script src="reveal.js/lib/js/head.min.js"></script>
+  <script src="reveal.js/js/reveal.js"></script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true },
+          { src: 'reveal.js/plugin/notes/notes.js', async: true }
+        ]
+      });
+    </script>
+    </body>
+</html>
