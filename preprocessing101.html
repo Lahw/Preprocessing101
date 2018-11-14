@@ -62,7 +62,6 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <body>
   <div class="reveal">
     <div class="slides">
-
 <section>
   <h1 class="title">Preprocessing 101</h1>
 </section>
@@ -78,7 +77,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 </ul></li>
 <li>NaN ?</li>
 <li>Feature Engineering</li>
-<li>One concrete example</li>
+<li>Quick and Dirty</li>
 </ol>
 </section>
 <section class="slide level1">
@@ -117,13 +116,13 @@ Golden Rules
 <h1>Codebase</h1>
 <div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python"><span class="im">import</span> numpy <span class="im">as</span> np
 <span class="im">import</span> pandas <span class="im">as</span> pd
-train <span class="op">=</span> pd.read_csv(<span class="st">&#39;train.csv&#39;</span>)
-test <span class="op">=</span> pd.read_csv(<span class="st">&#39;test.csv&#39;</span>)
-target <span class="op">=</span> train[<span class="st">&#39;TARGET_COLUMN&#39;</span>]
-train.drop(<span class="st">&#39;TARGET_COLUMN&#39;</span>, axis<span class="op">=</span><span class="dv">1</span>, inplace<span class="op">=</span><span class="va">True</span>)
-piv_train <span class="op">=</span> train.shape[<span class="dv">0</span>]
+
+train <span class="op">=</span> pd.read_csv(<span class="st">&#39;train.csv&#39;</span>, na_values=[<span class="st">&#39;none&#39;</span>, <span class="st">&#39;unknown&#39;</span>])
+test <span class="op">=</span> pd.read_csv(<span class="st">&#39;test.csv&#39;</span>, na_values=[<span class="st">&#39;none&#39;</span>, <span class="st">&#39;unknown&#39;</span>])
+<span class="co"># You "should" drop the ID column there</span>
 
 <span class="co"># Creating a DataFrame with train+test data</span>
+piv_train <span class="op">=</span> train.shape[<span class="dv">0</span>]
 df_all <span class="op">=</span> pd.concat((train, test), axis<span class="op">=</span><span class="dv">0</span>, ignore_index<span class="op">=</span><span class="va">True</span>)</code></pre></div>
 </section>
 <section class="slide level1">
@@ -310,57 +309,66 @@ Feature Engineering
 </ol>
 <p>[…]</p>
 </section>
+
+<section class="slide level1">
+
+<h2 id="against-anonymous-numerical-features">With only anonymous numerical features</h2>
+<ol type="1">
+<ul>
+<li><p>Create a ton of polynomial features...</p>
+<a href="http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PolynomialFeatures.html#sklearn.preprocessing.PolynomialFeatures">Sklearn's Polynomial Features</a></li>
+<li><p>... And select among them !</p>
+<a href="http://scikit-learn.org/stable/modules/classes.html#module-sklearn.feature_selection">Sklearn's Features Selection</a> (SelectKBest, RFECV)</li>
+</ul>
+</section>
 </section>
 <section class="slide level1">
 
 <section>
 <h1>
-Bonus: Preprocessing for my first soumission
+Quick & Dirty
 </h1>
-<p>Don’t go down if you don’t want to get spoiled</p>
 </section>
 <section class="slide level1">
 
-<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python"><span class="im">import</span> pandas <span class="im">as</span> pd
-<span class="im">import</span> numpy <span class="im">as</span> np
-<span class="im">from</span> sklearn.preprocessing <span class="im">import</span> LabelEncoder, Imputer
-
-<span class="co"># Import</span>
-test <span class="op">=</span> pd.read_csv(<span class="st">&#39;test.csv&#39;</span>, sep<span class="op">=</span><span class="st">&#39;;&#39;</span>, na_values<span class="op">=</span><span class="st">&#39;(MISSING)&#39;</span>)
-train <span class="op">=</span> pd.read_csv(<span class="st">&#39;train.csv&#39;</span>, sep<span class="op">=</span><span class="st">&#39;;&#39;</span>, na_values<span class="op">=</span><span class="st">&#39;(MISSING)&#39;</span>)
-target <span class="op">=</span> train[<span class="st">&#39;VARIABLE_CIBLE&#39;</span>]
-train.drop(<span class="st">&#39;VARIABLE_CIBLE&#39;</span>, axis<span class="op">=</span><span class="dv">1</span>, inplace<span class="op">=</span><span class="va">True</span>)
-piv_train <span class="op">=</span> train.shape[<span class="dv">0</span>]
-
-<span class="co"># Creating a DataFrame with train+test data</span>
-df_all <span class="op">=</span> pd.concat((train, test), axis<span class="op">=</span><span class="dv">0</span>, ignore_index<span class="op">=</span><span class="va">True</span>)
-
-
-<span class="co">#################</span>
-<span class="co"># Preprocessing</span>
-<span class="co">#################</span>
-numerics <span class="op">=</span> [<span class="st">&#39;int16&#39;</span>, <span class="st">&#39;int32&#39;</span>, <span class="st">&#39;int64&#39;</span>, <span class="st">&#39;float16&#39;</span>, <span class="st">&#39;float32&#39;</span>, <span class="st">&#39;float64&#39;</span>]
-date_columns <span class="op">=</span> [<span class="st">&#39;PRIORITY_MONTH&#39;</span>, <span class="st">&#39;FILING_MONTH&#39;</span>, <span class="st">&#39;PUBLICATION_MONTH&#39;</span>, <span class="st">&#39;BEGIN_MONTH&#39;</span>]
-non_numeric_columns <span class="op">=</span> train.select_dtypes(exclude<span class="op">=</span>numerics).columns.difference(date_columns)
-
-<span class="co"># Label Encoding</span>
-df_all[non_numeric_columns] <span class="op">=</span> df_all[non_numeric_columns].<span class="bu">apply</span>(LabelEncoder().fit_transform)
-
-<span class="co"># Just get the year</span>
-regex <span class="op">=</span> <span class="vs">r&#39;/([\d]</span><span class="sc">{4}</span><span class="vs">)&#39;</span>
-<span class="cf">for</span> col <span class="op">in</span> date_columns:
-    df_all[col] <span class="op">=</span> df_all[col].<span class="bu">str</span>.extract(regex)
-
-
-<span class="co"># Replacing NaN values with mean</span>
-all_data <span class="op">=</span> Imputer().fit_transform(df_all)
-
-<span class="co"># Recreate train / test</span>
-train, test <span class="op">=</span> all_data[:piv_train], all_data[piv_train:]
-
-<span class="co"># Format target</span>
-target <span class="op">=</span> target.replace(to_replace<span class="op">=</span>[<span class="st">&#39;GRANTED&#39;</span>, <span class="st">&#39;NOT GRANTED&#39;</span>], value<span class="op">=</span>[<span class="dv">1</span>., <span class="dv">0</span>.])</code></pre></div>
+<h2 id="you-always-need-a-baseline">You always need a baseline</h2>
+<p>A small script with one goal:</p><p>deliver a (not so bad) prediction</p>
 </section>
+<section class="slide level1">
+
+<h2 id="my-quick-and-dirty">My Quick and Dirty</h2>
+<ul>
+<li><p>All non numeric columns : Label encoder</p>
+<p>(do not keep text features)</p></li>
+<li><p>Date : Extract each component (year, month, day, hour, ...)</p></li>
+<li><p>NaN : Imputing</p></li>
+<li><p>0 feature engineering</p></li>
+<li><p>Model : XGBoost</p>
+<p>~ 300 / 500 rounds</p>
+<p>~ 8 / 10 depth</p></li>
+</ul>
+</section>
+</section>
+
+<section class="slide level1">
+
+<section>
+<h1>
+Going further?
+</h1>
+</section>
+
+<section class="slide level1">
+
+<h2 id="some-ideas">Some ideas</h2>
+<ol>
+<li><p>Hyper parameters optimization</p><p>Random vs Grid vs Bayesian (<a href="https://github.com/hyperopt/hyperopt">hyperopt</a>)</p></li>
+<li><p>Model ensembling</p><a href="http://mlwave.com/kaggle-ensembling-guide/">MLWave Ensembling Guide</a></li>
+<li><p>Image Preprocessing</p><p>ConvNet</p></li>
+<li><p>Text Preprocessing</p><p>Stemming, TfIdf, Word2Vec, GloVe, ...</p></li>
+</ol>
+</section>
+
 </section>
     </div>
   </div>
